@@ -3,14 +3,22 @@
 # @author Sylvain CALADOR <sylvain.calador@akretion.com>
 # License AGPL-3.0 or later (https://www.gnu.org/licenses/agpl.html).
 
+import base64
 import errno
 import fnmatch
 import logging
+import socket
 from configparser import NoOptionError
+from io import BytesIO
 
 import usb.core
 from flask import jsonify, render_template, request
-from netifaces import AF_INET, ifaddresses, interfaces
+
+try:
+    from netifaces import AF_INET, ifaddresses, interfaces
+except ImportError:
+    AF_INET = ifaddresses = interfaces = None
+from PIL import Image
 from xmlescpos import Layout
 
 from pywebdriver import app, config, drivers
@@ -150,7 +158,11 @@ else:
             self.vendor_product = None
             self.open_args = []
             if device_type == "usb":
-                printers = self.connected_usb_devices()
+                try:
+                    printers = self.connected_usb_devices()
+                except Exception as e:
+                    _logger.warning("USB backend not available: %s", e)
+                    printers = []
                 if printers:
                     printer = printers[0]
                     idVendor = printer.get("vendor")
@@ -210,8 +222,8 @@ else:
                     usb.core.find(idVendor=self.idVendor, idProduct=self.idProduct)
                     is not None
                 )
-            # TODO: Determine the state of the printer for different device_type
-            return False
+            # For win32 and serial, assume available — connection errors surface on open
+            return True
 
         def connected_usb_devices(self):
             connected = []
@@ -227,28 +239,26 @@ else:
             return connected
 
         def open_printer(self):
-            # Check if the printer is still available and wasn't disconnected
+            # Reopen if printer was disconnected (e.g., USB unplugged)
             if not self.printer_available():
                 self.close()
                 return
 
+            # Device was previously initialized
+            # Try writing to it to see if it is still available
+            # If we get Error ENODEV it might have been temporarily disconnected
+            # -> try to reopen
+            # Otherwise no reopening is neccessary
             if self.device:
-                if device_type == "usb":
-                    # Device was previously initialized
-                    # Try writing to it to see if it is still available
-                    # If we get Error ENODEV it might have been temporarily disconnected
-                    # -> try to reopen
-                    # Otherwise no reopening is neccessary
-                    try:
-                        self._raw("")
-                    except usb.core.USBError as e:
-                        if e.errno != ENODEV:
-                            self.set_status("error", e)
-                        _logger.info("Printer was disconnected. Reconnecting")
-                    else:
-                        return
-                else:
+                if device_type != "usb":
                     return
+                try:
+                    self._raw("")
+                    return
+                except usb.core.USBError as e:
+                    if e.errno != ENODEV:
+                        self.set_status("error", e)
+                    _logger.info("Printer was disconnected. Reconnecting")
 
             try:
                 self.open(*self.open_args)
@@ -258,6 +268,13 @@ else:
                 self.set_status("error", e)
                 self.close()
 
+        def close_printer(self):
+            # win32: EndDocPrinter/ClosePrinter must be called to commit the job
+            # to the spooler. USB/serial keep the handle open between jobs.
+            if device_type == "win32":
+                self.close()
+                self.device = None
+
         def open_cashbox(self, printer):
             self.open_printer()
             if not self.device:
@@ -265,39 +282,68 @@ else:
 
             self.cashdraw(2)
             self.cashdraw(5)
+            self.close_printer()
 
         def get_status(self, **params):
             messages = []
-            self.open_printer()
-            if not self.device:
-                status = "disconnected"
-            elif device_type == "serial":
-                # Maybe we could do something here to start serial
-                status = "connected"
-            elif device_type == "usb":
-                status = "connected"
-            elif device_type == "win32":
-                messages.append(self.printer_name)
-                result = win32print.GetPrinter(self.device, 2)
-                status = PRINTER_STATUS_DICT.get(result["Status"])
-                if status:
-                    messages.append(status["title"])
-                else:
-                    messages.append("UNKNOWN: {}".format(result["Status"]))
-                if not status or status["title"] in ["OFFLINE", "NOT_AVAILABLE"]:
+            if device_type == "win32":
+                # Query printer status directly — do NOT call open_printer() here
+                # because Win32Raw.open() calls StartDocPrinter which creates a spool job
+                handle = None
+                result = None
+                try:
+                    handle = win32print.OpenPrinter(self.printer_name)
+                    result = win32print.GetPrinter(handle, 2)
+                except Exception as e:
                     status = "disconnected"
-                else:
-                    status = "connected"
+                    messages.append(str(e))
+                finally:
+                    if handle:
+                        win32print.ClosePrinter(handle)
+                    messages.append(self.printer_name)
+                    if result:
+                        pstatus = PRINTER_STATUS_DICT.get(result["Status"])
+                        messages.append(
+                            pstatus["title"]
+                            if pstatus
+                            else "UNKNOWN: {}".format(result["Status"])
+                        )
+                        status = (
+                            "disconnected"
+                            if not pstatus
+                            or pstatus["title"] in ["OFFLINE", "NOT_AVAILABLE"]
+                            else "connected"
+                        )
             else:
-                status = "disconnected"
+                self.open_printer()
+                status = "connected" if self.device else "disconnected"
             return {
                 "status": status,
                 "messages": messages,
             }
 
         def receipt_jpeg(self, b64image):
-            content = '<img src="data:image/png;base64, {}" />'.format(b64image)
-            self.receipt(content)
+            # Use python-escpos image() directly instead of wrapping in an <img> tag
+            # and passing to xmlescpos.Layout. The Layout path blocks on win32 because
+            # Win32Raw.WritePrinter() hangs while xmlescpos is rasterizing the image
+            # inside the write loop. python-escpos image() rasterizes first (in memory)
+            # then writes the complete ESC/POS byte stream in one shot — no blocking.
+            # This is also more correct: bitImageRaster (GS v 0) is the standard path
+            # for all device types (USB, serial, win32).
+            self.open_printer()
+            if not self.device:
+                return
+
+            img_data = base64.b64decode(b64image)
+            _logger.debug("receipt_jpeg: image decoded, size=%d bytes", len(img_data))
+            im = Image.open(BytesIO(img_data))
+            _logger.debug("receipt_jpeg: PIL image opened %dx%d", im.width, im.height)
+            self.image(im, impl="bitImageColumn")
+            _logger.debug("receipt_jpeg: image() done")
+            self.cut()
+            _logger.debug("receipt_jpeg: cut() done")
+            self.close_printer()
+            _logger.debug("receipt_jpeg: closed")
 
         def receipt(self, content):
             self.open_printer()
@@ -306,6 +352,7 @@ else:
 
             Layout(content).format(self)
             self.cut()
+            self.close_printer()
 
         def printstatus(self, eprint):
 
@@ -314,16 +361,26 @@ else:
                 return
 
             addr_lines = []
-            for ifaceName in interfaces():
-                addresses = [
-                    i["addr"]
-                    for i in ifaddresses(ifaceName).setdefault(
-                        AF_INET, [{"addr": "No IP addr"}]
+            if interfaces is not None:
+                # netifaces is available (Linux), list all interface IPs
+                for ifaceName in interfaces():
+                    addresses = [
+                        i["addr"]
+                        for i in ifaddresses(ifaceName).setdefault(
+                            AF_INET, [{"addr": "No IP addr"}]
+                        )
+                    ]
+                    addr_lines.append(
+                        "<p>" + ",".join(addresses) + " (" + ifaceName + ")" + "</p>"
                     )
-                ]
-                addr_lines.append(
-                    "<p>" + ",".join(addresses) + " (" + ifaceName + ")" + "</p>"
-                )
+            else:
+                # netifaces not available (Windows), fallback to socket.gethostbyname
+                try:
+                    addr_lines.append(
+                        "<p>" + socket.gethostbyname(socket.gethostname()) + "</p>"
+                    )
+                except Exception:
+                    addr_lines.append("<p>IP unavailable</p>")
             msg = (
                 _(
                     """
