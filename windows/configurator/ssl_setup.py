@@ -2,12 +2,16 @@
 
 import os
 import subprocess
+import sys
 
 CERT_FILE = "localhost+2.pem"
 KEY_FILE = "localhost+2-key.pem"
 
 
 def mkcert_path(app_dir):
+    # PyInstaller places data files in _internal subdirectory
+    if getattr(sys, "frozen", False):
+        return os.path.join(app_dir, "_internal", "mkcert.exe")
     return os.path.join(app_dir, "mkcert.exe")
 
 

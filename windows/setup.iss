@@ -1,7 +1,7 @@
 ; Script generado para PyWebDriver con configurador grafico (PyWebView).
 ; SEE THE DOCUMENTATION FOR DETAILS ON CREATING INNO SETUP SCRIPT FILES!
 
-#define MyAppName "Pywebdriver"
+#define MyAppName "Odoo Pywebdriver"
 #define MyAppVersion "3.0.21"
 #define MyAppPublisher "Akretion"
 #define MyAppURL "https://github.com/pywebdriver/pywebdriver"

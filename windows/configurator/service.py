@@ -2,6 +2,7 @@
 
 import os
 import subprocess
+import sys
 
 SERVICE_NAME = "Pywebdriver"
 LOG_ROTATE_BYTES = 1_000_000
@@ -26,6 +27,9 @@ def _run(args, check=False):
 
 
 def nssm_path(app_dir):
+    # PyInstaller places data files in _internal subdirectory
+    if getattr(sys, "frozen", False):
+        return os.path.join(app_dir, "_internal", "nssm.exe")
     return os.path.join(app_dir, "nssm.exe")
 
 
