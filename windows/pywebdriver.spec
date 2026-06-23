@@ -76,11 +76,6 @@ configurator = Analysis(
     noarchive=False,
 )
 
-MERGE(
-    (server, "pywebdriver", "pywebdriver"),
-    (configurator, "pywebdriver-configurator", "pywebdriver-configurator"),
-)
-
 server_pyz = PYZ(server.pure, server.zipped_data, cipher=block_cipher)
 server_exe = EXE(
     server_pyz,
