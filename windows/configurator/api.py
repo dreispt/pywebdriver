@@ -1,7 +1,7 @@
-"""API expuesta a JavaScript a traves de pywebview.
+"""API exposed to JavaScript through pywebview.
 
-Cada metodo publico de Api se invoca como `window.pywebview.api.<metodo>()` desde JS.
-Las respuestas siguen siempre la forma {ok: bool, data?: ..., error?: str}.
+Each public method of Api is invoked as `window.pywebview.api.<method>()` from JS.
+Responses always follow the form {ok: bool, data?: ..., error?: str}.
 """
 
 import os
@@ -10,6 +10,7 @@ import traceback
 
 from . import config_io, hardware, service, ssl_setup
 from .drivers_meta import windows_drivers
+from .i18n import init_translations, set_locale
 
 
 def _ok(data=None):
@@ -33,10 +34,17 @@ def _safe(fn):
 
 
 class Api:
-    def __init__(self, app_dir, on_finish=None):
+    def __init__(self, app_dir, on_finish=None, locale="en"):
         self.app_dir = app_dir
         self.on_finish = on_finish
         self.config_path = config_io.default_config_path(app_dir)
+        init_translations(locale)
+
+    @_safe
+    def set_locale(self, locale):
+        """Set the translation locale."""
+        set_locale(locale)
+        return _ok()
 
     @_safe
     def get_bootstrap(self):
