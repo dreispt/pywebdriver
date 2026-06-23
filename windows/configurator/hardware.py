@@ -1,4 +1,4 @@
-"""Deteccion de hardware en Windows: impresoras, puertos COM, dispositivos USB."""
+"""Hardware detection on Windows: printers, COM ports, USB devices."""
 
 import sys
 

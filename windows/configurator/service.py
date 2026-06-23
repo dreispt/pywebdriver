@@ -1,4 +1,4 @@
-"""Wrapper alrededor de NSSM para gestionar el servicio Windows de PyWebDriver."""
+"""Wrapper around NSSM to manage the PyWebDriver Windows service."""
 
 import os
 import subprocess

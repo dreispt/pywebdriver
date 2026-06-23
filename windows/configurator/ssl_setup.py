@@ -1,4 +1,4 @@
-"""Generacion de certificados SSL via mkcert."""
+"""SSL certificate generation via mkcert."""
 
 import os
 import subprocess
@@ -16,7 +16,7 @@ def mkcert_path(app_dir):
 
 
 def generate(app_dir):
-    """Genera certificados SSL en app_dir y devuelve (cert_path, key_path)."""
+    """Generate SSL certificates in app_dir and return (cert_path, key_path)."""
     mkcert = mkcert_path(app_dir)
     if not os.path.exists(mkcert):
         raise FileNotFoundError(mkcert)

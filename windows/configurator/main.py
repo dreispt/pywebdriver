@@ -1,9 +1,9 @@
-"""Entry point del configurador grafico de PyWebDriver.
+"""Entry point for the PyWebDriver graphical configurator.
 
-Modo interactivo (default):
+Interactive mode (default):
     pywebdriver-configurator.exe
 
-Modo silencioso (escribe config con defaults sin abrir GUI, util para /SILENT):
+Silent mode (writes config with defaults without opening GUI, useful for /SILENT):
     pywebdriver-configurator.exe --silent
     pywebdriver-configurator.exe --silent --install-service --generate-ssl
 """
@@ -85,14 +85,14 @@ def run_gui(app_path):
         import webview
     except ImportError:
         print(
-            "pywebview no esta instalado. Ejecutar: pip install pywebview",
+            "pywebview is not installed. Run: pip install pywebview",
             file=sys.stderr,
         )
         return 2
 
     index_path = os.path.join(web_dir(), "index.html")
     if not os.path.exists(index_path):
-        print(f"No se encontro la UI del configurador en {index_path}", file=sys.stderr)
+        print(f"Configurator UI not found at {index_path}", file=sys.stderr)
         return 3
 
     finished = {"flag": False}

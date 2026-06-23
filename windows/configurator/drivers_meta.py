@@ -1,23 +1,20 @@
-"""Metadata de drivers disponibles en PyWebDriver.
+"""Metadata for available drivers in PyWebDriver.
 
-Cada driver se describe con:
-- key: identificador interno (coincide con [application] drivers= y nombre del modulo)
-- label: nombre legible (es/en)
-- description: explicacion corta (es/en)
-- section: seccion en config.ini (None si no requiere config propia)
+Each driver is described with:
+- key: internal identifier (matches [application] drivers= and module name)
+- label: readable name (English string, translated via JSON)
+- description: short explanation (English string, translated via JSON)
+- section: section in config.ini (None if no custom config needed)
 - platform: 'all', 'windows', 'linux'
-- recommended: incluido por defecto en instalaciones tipicas
-- fields: lista de campos de configuracion para el formulario dinamico
+- recommended: included by default in typical installations
+- fields: list of configuration fields for the dynamic form
 """
 
 DRIVERS = [
     {
         "key": "odoo8",
-        "label": {"es": "Compatibilidad Odoo 8+", "en": "Odoo 8+ compatibility"},
-        "description": {
-            "es": "Activa la compatibilidad con el POS de Odoo. Imprescindible si se usa Odoo.",
-            "en": "Enables Odoo POS compatibility. Required if using Odoo.",
-        },
+        "label": "Odoo 8+ compatibility",
+        "description": "Enables Odoo POS compatibility. Required if using Odoo.",
         "section": None,
         "platform": "all",
         "recommended": True,
@@ -25,11 +22,8 @@ DRIVERS = [
     },
     {
         "key": "win32print_driver",
-        "label": {"es": "Impresora Windows generica", "en": "Generic Windows printer"},
-        "description": {
-            "es": "Imprime usando el driver de Windows (cualquier impresora instalada).",
-            "en": "Prints via the Windows driver (any installed printer).",
-        },
+        "label": "Generic Windows printer",
+        "description": "Prints via the Windows driver (any installed printer).",
         "section": None,
         "platform": "windows",
         "recommended": True,
@@ -37,28 +31,22 @@ DRIVERS = [
     },
     {
         "key": "escpos_driver",
-        "label": {"es": "Impresora ESC/POS", "en": "ESC/POS printer"},
-        "description": {
-            "es": "Impresora termica Epson/compatible (USB, serial o Win32).",
-            "en": "Epson/compatible thermal printer (USB, serial or Win32).",
-        },
+        "label": "ESC/POS printer",
+        "description": "Epson/compatible thermal printer (USB, serial or Win32).",
         "section": "escpos_driver",
         "platform": "all",
         "recommended": True,
         "fields": [
             {
                 "key": "device_type",
-                "label": {"es": "Tipo de conexion", "en": "Connection type"},
+                "label": "Connection type",
                 "type": "select",
                 "options": ["win32", "usb", "serial"],
                 "default": "win32",
             },
             {
                 "key": "printer_names",
-                "label": {
-                    "es": "Nombres de impresora (Win32, comodines OK)",
-                    "en": "Printer names (Win32, wildcards OK)",
-                },
+                "label": "Printer names (Win32, wildcards OK)",
                 "type": "text",
                 "default": "EPSON TM*",
                 "depends_on": {"device_type": "win32"},
@@ -66,7 +54,7 @@ DRIVERS = [
             },
             {
                 "key": "serial_device_name",
-                "label": {"es": "Puerto serial", "en": "Serial port"},
+                "label": "Serial port",
                 "type": "select",
                 "default": "COM1",
                 "depends_on": {"device_type": "serial"},
@@ -74,21 +62,21 @@ DRIVERS = [
             },
             {
                 "key": "serial_baudrate",
-                "label": {"es": "Baudrate", "en": "Baudrate"},
+                "label": "Baudrate",
                 "type": "number",
                 "default": 9600,
                 "depends_on": {"device_type": "serial"},
             },
             {
                 "key": "serial_bytesize",
-                "label": {"es": "Bytesize", "en": "Bytesize"},
+                "label": "Bytesize",
                 "type": "number",
                 "default": 8,
                 "depends_on": {"device_type": "serial"},
             },
             {
                 "key": "serial_timeout",
-                "label": {"es": "Timeout (s)", "en": "Timeout (s)"},
+                "label": "Timeout (s)",
                 "type": "number",
                 "default": 1,
                 "depends_on": {"device_type": "serial"},
@@ -97,18 +85,15 @@ DRIVERS = [
     },
     {
         "key": "display_driver",
-        "label": {"es": "Display de cliente", "en": "Customer display"},
-        "description": {
-            "es": "Pantalla de cliente conectada por puerto serial (COM).",
-            "en": "Customer-facing display connected via serial port (COM).",
-        },
+        "label": "Customer display",
+        "description": "Customer-facing display connected via serial port (COM).",
         "section": "display_driver",
         "platform": "all",
         "recommended": False,
         "fields": [
             {
                 "key": "device_name",
-                "label": {"es": "Puerto", "en": "Port"},
+                "label": "Port",
                 "type": "select",
                 "default": "auto",
                 "datasource": "com_ports",
@@ -116,13 +101,13 @@ DRIVERS = [
             },
             {
                 "key": "device_rate",
-                "label": {"es": "Baudrate", "en": "Baudrate"},
+                "label": "Baudrate",
                 "type": "number",
                 "default": 9600,
             },
             {
                 "key": "device_timeout",
-                "label": {"es": "Timeout (s)", "en": "Timeout (s)"},
+                "label": "Timeout (s)",
                 "type": "number",
                 "default": 0.05,
                 "step": 0.01,
@@ -131,21 +116,15 @@ DRIVERS = [
     },
     {
         "key": "telium_driver",
-        "label": {
-            "es": "Terminal de pago Ingenico/Telium",
-            "en": "Ingenico/Telium payment terminal",
-        },
-        "description": {
-            "es": "Terminal de pago con protocolo Telium 3 (Ingenico, Sagem).",
-            "en": "Payment terminal using Telium 3 protocol (Ingenico, Sagem).",
-        },
+        "label": "Ingenico/Telium payment terminal",
+        "description": "Payment terminal using Telium 3 protocol (Ingenico, Sagem).",
         "section": "telium_driver",
         "platform": "all",
         "recommended": False,
         "fields": [
             {
                 "key": "device_name",
-                "label": {"es": "Puerto", "en": "Port"},
+                "label": "Port",
                 "type": "select",
                 "default": "auto",
                 "datasource": "com_ports",
@@ -153,7 +132,7 @@ DRIVERS = [
             },
             {
                 "key": "device_rate",
-                "label": {"es": "Baudrate", "en": "Baudrate"},
+                "label": "Baudrate",
                 "type": "number",
                 "default": 9600,
             },
@@ -161,24 +140,21 @@ DRIVERS = [
     },
     {
         "key": "adyen_driver",
-        "label": {"es": "Terminal Adyen", "en": "Adyen terminal"},
-        "description": {
-            "es": "Terminal de pago Adyen (Terminal API 3.0).",
-            "en": "Adyen payment terminal (Terminal API 3.0).",
-        },
+        "label": "Adyen terminal",
+        "description": "Adyen payment terminal (Terminal API 3.0).",
         "section": "adyen_driver",
         "platform": "all",
         "recommended": False,
         "fields": [
             {
                 "key": "endpoint",
-                "label": {"es": "Endpoint", "en": "Endpoint"},
+                "label": "Endpoint",
                 "type": "text",
                 "default": "https://terminal-api-live.adyen.com/sync",
             },
             {
                 "key": "api_key",
-                "label": {"es": "API Key", "en": "API Key"},
+                "label": "API Key",
                 "type": "password",
                 "default": "",
             },
@@ -186,45 +162,42 @@ DRIVERS = [
     },
     {
         "key": "scale_driver",
-        "label": {"es": "Bascula", "en": "Scale"},
-        "description": {
-            "es": "Bascula con protocolo Toledo o similar.",
-            "en": "Scale using Toledo or similar protocol.",
-        },
+        "label": "Scale",
+        "description": "Scale using Toledo or similar protocol.",
         "section": "scale_driver",
         "platform": "all",
         "recommended": False,
         "fields": [
             {
                 "key": "protocol_name",
-                "label": {"es": "Protocolo", "en": "Protocol"},
+                "label": "Protocol",
                 "type": "select",
                 "options": ["toledo"],
                 "default": "toledo",
             },
             {
                 "key": "unit",
-                "label": {"es": "Unidad", "en": "Unit"},
+                "label": "Unit",
                 "type": "select",
                 "options": ["kg", "g", "lb", "oz"],
                 "default": "kg",
             },
             {
                 "key": "port",
-                "label": {"es": "Puerto", "en": "Port"},
+                "label": "Port",
                 "type": "select",
                 "default": "COM1",
                 "datasource": "com_ports",
             },
             {
                 "key": "baudrate",
-                "label": {"es": "Baudrate", "en": "Baudrate"},
+                "label": "Baudrate",
                 "type": "number",
                 "default": 9600,
             },
             {
                 "key": "poll_interval",
-                "label": {"es": "Intervalo (s)", "en": "Poll interval (s)"},
+                "label": "Poll interval (s)",
                 "type": "number",
                 "default": 0.5,
                 "step": 0.1,
@@ -233,50 +206,47 @@ DRIVERS = [
     },
     {
         "key": "serial_driver",
-        "label": {"es": "Puerto serial generico", "en": "Generic serial port"},
-        "description": {
-            "es": "Acceso directo a un puerto serial para integraciones a medida.",
-            "en": "Direct access to a serial port for custom integrations.",
-        },
+        "label": "Generic serial port",
+        "description": "Direct access to a serial port for custom integrations.",
         "section": "serial_driver",
         "platform": "all",
         "recommended": False,
         "fields": [
             {
                 "key": "port",
-                "label": {"es": "Puerto", "en": "Port"},
+                "label": "Port",
                 "type": "select",
                 "default": "COM3",
                 "datasource": "com_ports",
             },
             {
                 "key": "baudrate",
-                "label": {"es": "Baudrate", "en": "Baudrate"},
+                "label": "Baudrate",
                 "type": "number",
                 "default": 9600,
             },
             {
                 "key": "bytesize",
-                "label": {"es": "Bytesize", "en": "Bytesize"},
+                "label": "Bytesize",
                 "type": "number",
                 "default": 8,
             },
             {
                 "key": "parity",
-                "label": {"es": "Paridad", "en": "Parity"},
+                "label": "Parity",
                 "type": "select",
                 "options": ["N", "E", "O", "M", "S"],
                 "default": "N",
             },
             {
                 "key": "stopbits",
-                "label": {"es": "Stop bits", "en": "Stop bits"},
+                "label": "Stop bits",
                 "type": "number",
                 "default": 1,
             },
             {
                 "key": "timeout",
-                "label": {"es": "Timeout (s)", "en": "Timeout (s)"},
+                "label": "Timeout (s)",
                 "type": "number",
                 "default": 5,
             },
@@ -284,24 +254,21 @@ DRIVERS = [
     },
     {
         "key": "signature_driver",
-        "label": {"es": "Captura de firma", "en": "Signature capture"},
-        "description": {
-            "es": "Almacena firmas SVG enviadas desde el frontend.",
-            "en": "Stores SVG signatures sent from the frontend.",
-        },
+        "label": "Signature capture",
+        "description": "Stores SVG signatures sent from the frontend.",
         "section": "signature_driver",
         "platform": "all",
         "recommended": False,
         "fields": [
             {
                 "key": "signature_file",
-                "label": {"es": "Archivo de firma", "en": "Signature file"},
+                "label": "Signature file",
                 "type": "text",
                 "default": "signature.svg",
             },
             {
                 "key": "download_path",
-                "label": {"es": "Ruta de descarga", "en": "Download path"},
+                "label": "Download path",
                 "type": "text",
                 "default": "C:\\Temp",
             },

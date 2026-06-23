@@ -11,7 +11,7 @@ const STEPS = [
 ];
 
 window.APP_STATE = {
-  locale: "es",
+  locale: "en",
   bootstrap: null,
   state: null,
   driversMeta: [],
@@ -19,6 +19,43 @@ window.APP_STATE = {
   currentStep: 0,
   options: { generate_ssl: false, install_service: true, autostart: true },
   applied: false,
+};
+
+// Gettext instance
+window.gt = null;
+
+async function loadLocaleData(locale) {
+  try {
+    const response = await fetch(`locales/${locale}.json`);
+    if (!response.ok) {
+      throw new Error(`Failed to load locale ${locale}`);
+    }
+    const data = await response.json();
+    return { messages: data };
+  } catch (err) {
+    console.error(`Failed to load locale ${locale}:`, err);
+    // Fallback to en.json (English template)
+    if (locale !== 'en') {
+      return loadLocaleData('en');
+    }
+    throw err;
+  }
+}
+
+async function initGettext(locale) {
+  const localeData = await loadLocaleData(locale);
+  window.gt = new Gettext({
+    domain: 'messages',
+    locale: locale,
+    locale_data: localeData
+  });
+}
+
+window.t = function (key) {
+  if (window.gt) {
+    return window.gt.gettext(key);
+  }
+  return key;
 };
 
 const apiReady = new Promise((resolve) => {
@@ -33,7 +70,7 @@ async function callApi(method, ...args) {
   await apiReady;
   const result = await window.pywebview.api[method](...args);
   if (!result || !result.ok) {
-    const message = (result && result.error) || t("error_generic");
+    const message = (result && result.error) || t("An error occurred");
     throw new Error(message);
   }
   return result.data;
@@ -66,13 +103,14 @@ function el(tag, attrs, children) {
   return node;
 }
 
-function setLanguage(lang) {
+async function setLanguage(lang) {
   window.APP_STATE.locale = lang;
   window.APP_STATE.state.locale = lang;
+  await initGettext(lang);
   document.querySelectorAll("[data-lang]").forEach((btn) => {
     btn.classList.toggle("active", btn.dataset.lang === lang);
   });
-  $("#app-title").textContent = t("app_title");
+  $("#app-title").textContent = t("PyWebDriver Configurator");
   renderSidebar();
   renderStep();
 }
@@ -90,7 +128,7 @@ function renderSidebar() {
           : "",
     }, [
       el("span", { class: "step-num" }, [String(idx + 1)]),
-      el("span", {}, [t("step_" + step)]),
+      el("span", {}, [t(step.charAt(0).toUpperCase() + step.slice(1))]),
     ]);
     list.appendChild(li);
   });
@@ -99,8 +137,8 @@ function renderSidebar() {
 function setFooter({ backLabel, nextLabel, backDisabled, nextDisabled, nextHandler, backHandler, hideBack, hideNext }) {
   const back = $("#btn-back");
   const next = $("#btn-next");
-  back.textContent = backLabel || t("back");
-  next.textContent = nextLabel || t("next");
+  back.textContent = backLabel || t("Back");
+  next.textContent = nextLabel || t("Next");
   back.disabled = !!backDisabled;
   next.disabled = !!nextDisabled;
   back.style.display = hideBack ? "none" : "";
@@ -148,9 +186,12 @@ function renderStep() {
 function renderWelcome(main) {
   main.appendChild(
     el("div", { class: "welcome" }, [
-      el("h2", {}, [t("welcome_title")]),
-      el("p", {}, [t("welcome_text")]),
-      el("p", { class: "subtitle" }, [t("choose_language")]),
+      el("h2", {}, [t("Welcome to PyWebDriver")]),
+      el("p", {}, [t(
+        "This wizard will guide you through configuring PyWebDriver: "
+        + "hardware drivers, SSL certificates, and the Windows service."
+      )]),
+      el("p", { class: "subtitle" }, [t("Choose language")]),
       el("div", { class: "lang-cards" }, [
         el("div", {
           class: "lang-card" + (window.APP_STATE.locale === "es" ? " selected" : ""),
@@ -168,13 +209,15 @@ function renderWelcome(main) {
 
 function renderNetwork(main) {
   const flask = window.APP_STATE.state.flask;
-  main.appendChild(el("h2", {}, [t("network_title")]));
-  main.appendChild(el("p", { class: "subtitle" }, [t("network_subtitle")]));
+  main.appendChild(el("h2", {}, [t("Network configuration")]));
+  main.appendChild(el("p", { class: "subtitle" }, [
+    t("Where the PyWebDriver server will listen.")
+  ]));
 
   const form = el("div", {});
   form.appendChild(field({
-    label: t("host"),
-    hint: t("host_hint"),
+    label: t("Host (interface)"),
+    hint: t("127.0.0.1 = local only. 0.0.0.0 = all interfaces."),
     input: el("input", {
       type: "text",
       value: flask.host || "127.0.0.1",
@@ -182,7 +225,7 @@ function renderNetwork(main) {
     }),
   }));
   form.appendChild(field({
-    label: t("port"),
+    label: t("Port"),
     input: el("input", {
       type: "number",
       value: flask.port || 8069,
@@ -192,8 +235,8 @@ function renderNetwork(main) {
     }),
   }));
   form.appendChild(field({
-    label: t("cors"),
-    hint: t("cors_hint"),
+    label: t("Allowed CORS origins"),
+    hint: t("Use * to allow all. Separate multiple with commas."),
     input: el("input", {
       type: "text",
       value: flask.cors_origins || "*",
@@ -206,7 +249,7 @@ function renderNetwork(main) {
       checked: !!flask.debug,
       onchange: (e) => { flask.debug = e.target.checked; },
     }),
-    el("span", {}, [t("debug")]),
+    el("span", {}, [t("Debug mode (DO NOT use in production)")]),
   ]);
   form.appendChild(debugWrap);
 
@@ -215,8 +258,10 @@ function renderNetwork(main) {
 }
 
 function renderDrivers(main) {
-  main.appendChild(el("h2", {}, [t("drivers_title")]));
-  main.appendChild(el("p", { class: "subtitle" }, [t("drivers_subtitle")]));
+  main.appendChild(el("h2", {}, [t("Drivers to enable")]));
+  main.appendChild(el("p", { class: "subtitle" }, [
+    t("Tick the devices you will use. Items marked with ★ are recommended.")
+  ]));
 
   const enabled = new Set(window.APP_STATE.state.application.drivers);
   window.APP_STATE.driversMeta.forEach((driver) => {
@@ -244,14 +289,16 @@ function renderDrivers(main) {
 }
 
 function renderDriverConfig(main) {
-  main.appendChild(el("h2", {}, [t("driver_config_title")]));
-  main.appendChild(el("p", { class: "subtitle" }, [t("driver_config_subtitle")]));
+  main.appendChild(el("h2", {}, [t("Driver settings")]));
+  main.appendChild(el("p", { class: "subtitle" }, [
+    t("Adjust each enabled driver. Use Detect to scan connected hardware.")
+  ]));
 
   const detectBtn = el("button", {
     class: "btn",
     onclick: async () => {
       detectBtn.disabled = true;
-      detectBtn.textContent = t("detecting");
+      detectBtn.textContent = t("Detecting...");
       try {
         window.APP_STATE.hardware = await callApi("detect_hardware");
       } catch (err) {
@@ -259,7 +306,7 @@ function renderDriverConfig(main) {
       }
       renderStep();
     },
-  }, [t("detect_hardware")]);
+  }, [t("Detect hardware")]);
   main.appendChild(detectBtn);
 
   const enabled = window.APP_STATE.state.application.drivers;
@@ -268,7 +315,9 @@ function renderDriverConfig(main) {
   );
 
   if (configurable.length === 0) {
-    main.appendChild(el("p", { class: "subtitle" }, [t("no_drivers_selected")]));
+    main.appendChild(el("p", { class: "subtitle" }, [
+      t("No enabled drivers require additional configuration.")
+    ]));
     setFooter({});
     return;
   }
@@ -371,15 +420,18 @@ function field({ label, input, hint }) {
 }
 
 function renderSsl(main) {
-  main.appendChild(el("h2", {}, [t("ssl_title")]));
-  main.appendChild(el("p", { class: "subtitle" }, [t("ssl_subtitle")]));
+  main.appendChild(el("h2", {}, [t("SSL certificates")]));
+  main.appendChild(el("p", { class: "subtitle" }, [
+    t("PyWebDriver serves HTTPS. Generate self-signed certificates "
+    + "with mkcert (bundled) or use your own.")
+  ]));
 
   const flask = window.APP_STATE.state.flask;
   const ssl = window.APP_STATE.bootstrap.ssl;
 
   if (ssl.cert && ssl.key) {
     main.appendChild(el("div", { class: "alert success" }, [
-      `${t("ssl_existing")} ${ssl.cert} / ${ssl.key}`,
+      `${t("Existing certificates:")} ${ssl.cert} / ${ssl.key}`,
     ]));
     flask.sslcert = ssl.cert;
     flask.sslkey = ssl.key;
@@ -388,23 +440,29 @@ function renderSsl(main) {
   const status = el("div", {});
   main.appendChild(status);
 
-  const genBtn = el("button", { class: "btn primary" }, [t("ssl_generate")]);
+  const genBtn = el("button", { class: "btn primary" }, [
+    t("Generate certificates with mkcert")
+  ]);
   genBtn.onclick = async () => {
     genBtn.disabled = true;
-    genBtn.innerHTML = `<span class="spinner"></span>${t("ssl_generating")}`;
+    genBtn.innerHTML = `<span class="spinner"></span>${t(
+      "Generating certificates..."
+    )}`;
     try {
       const res = await callApi("generate_ssl");
       flask.sslcert = res.cert;
       flask.sslkey = res.key;
       window.APP_STATE.bootstrap.ssl = res;
       status.innerHTML = "";
-      status.appendChild(el("div", { class: "alert success" }, [t("ssl_generated")]));
+      status.appendChild(el("div", { class: "alert success" }, [
+        t("Certificates generated successfully.")
+      ]));
     } catch (err) {
       status.innerHTML = "";
       status.appendChild(el("div", { class: "alert error" }, [err.message]));
     }
     genBtn.disabled = false;
-    genBtn.textContent = t("ssl_generate");
+    genBtn.textContent = t("Generate certificates with mkcert");
   };
   main.appendChild(genBtn);
 
@@ -419,7 +477,7 @@ function renderSsl(main) {
         }
       },
     }),
-    el("span", {}, [t("ssl_skip")]),
+    el("span", {}, [t("Skip SSL (not recommended)")]),
   ]);
   main.appendChild(skipWrap);
 
@@ -427,8 +485,11 @@ function renderSsl(main) {
 }
 
 function renderService(main) {
-  main.appendChild(el("h2", {}, [t("service_title")]));
-  main.appendChild(el("p", { class: "subtitle" }, [t("service_subtitle")]));
+  main.appendChild(el("h2", {}, [t("Windows service")]));
+  main.appendChild(el("p", { class: "subtitle" }, [
+    t("PyWebDriver runs as a service (NSSM). "
+    + "You can install and auto-start it.")
+  ]));
 
   const status = window.APP_STATE.bootstrap.service_status;
   const pillClass =
@@ -437,9 +498,12 @@ function renderService(main) {
     : status.toLowerCase().includes("stop") ? "stopped"
     : "unknown";
   main.appendChild(el("p", {}, [
-    `${t("service_current")} `,
+    `${t("Current status:")} `,
     el("span", { class: `status-pill ${pillClass}` }, [
-      t("status_" + (status === "not_installed" ? "not_installed" : pillClass === "running" ? "running" : pillClass === "stopped" ? "stopped" : "unknown"))
+      t(status === "not_installed" ? "Not installed"
+        : pillClass === "running" ? "Running"
+        : pillClass === "stopped" ? "Stopped"
+        : "Unknown")
     ]),
   ]));
 
@@ -450,7 +514,7 @@ function renderService(main) {
       checked: opts.install_service,
       onchange: (e) => { opts.install_service = e.target.checked; },
     }),
-    el("span", {}, [t("service_install")]),
+    el("span", {}, [t("Install service when finished")]),
   ]));
   main.appendChild(el("label", { class: "toggle" }, [
     el("input", {
@@ -458,7 +522,7 @@ function renderService(main) {
       checked: opts.autostart,
       onchange: (e) => { opts.autostart = e.target.checked; },
     }),
-    el("span", {}, [t("service_autostart")]),
+    el("span", {}, [t("Start automatically with Windows")]),
   ]));
 
   if (status !== "not_installed") {
@@ -466,19 +530,19 @@ function renderService(main) {
     ctrl.appendChild(el("button", {
       class: "btn",
       onclick: () => serviceAction("start_service", main),
-    }, [t("start")]));
+    }, [t("Start")]));
     ctrl.appendChild(el("button", {
       class: "btn",
       onclick: () => serviceAction("stop_service", main),
-    }, [t("stop")]));
+    }, [t("Stop")]));
     ctrl.appendChild(el("button", {
       class: "btn",
       onclick: () => serviceAction("restart_service", main),
-    }, [t("restart")]));
+    }, [t("Restart")]));
     ctrl.appendChild(el("button", {
       class: "btn danger",
       onclick: () => serviceAction("remove_service", main),
-    }, [t("remove")]));
+    }, [t("Uninstall")]));
     main.appendChild(ctrl);
   }
 
@@ -496,22 +560,24 @@ async function serviceAction(method, main) {
 }
 
 function renderSummary(main) {
-  main.appendChild(el("h2", {}, [t("summary_title")]));
-  main.appendChild(el("p", { class: "subtitle" }, [t("summary_subtitle")]));
+  main.appendChild(el("h2", {}, [t("Summary and apply")]));
+  main.appendChild(el("p", { class: "subtitle" }, [
+    t("Review the values and click Apply to save the configuration.")
+  ]));
 
   const s = window.APP_STATE.state;
   const opts = window.APP_STATE.options;
   const grid = el("dl", { class: "summary-grid" });
 
   const rows = [
-    [t("summary_locale"), s.locale],
-    [t("summary_network"), `${s.flask.host}:${s.flask.port}`],
-    [t("summary_drivers"), s.application.drivers.join(", ") || "-"],
-    [t("summary_ssl"), s.flask.sslcert ? `${s.flask.sslcert} / ${s.flask.sslkey}` : t("no")],
-    [t("summary_service"),
+    [t("Language"), s.locale],
+    [t("Network"), `${s.flask.host}:${s.flask.port}`],
+    [t("Drivers"), s.application.drivers.join(", ") || "-"],
+    [t("SSL"), s.flask.sslcert ? `${s.flask.sslcert} / ${s.flask.sslkey}` : t("No")],
+    [t("Service"),
       opts.install_service
-        ? `${t("yes")} (${opts.autostart ? t("status_running") : t("status_stopped")})`
-        : t("no")],
+        ? `${t("Yes")} (${opts.autostart ? t("Running") : t("Stopped")})`
+        : t("No")],
   ];
   rows.forEach(([k, v]) => {
     grid.appendChild(el("dt", {}, [k]));
@@ -522,30 +588,32 @@ function renderSummary(main) {
   const result = el("div", { style: "margin-top:18px" });
   main.appendChild(result);
 
-  const applyBtn = el("button", { class: "btn primary" }, [t("apply")]);
+  const applyBtn = el("button", { class: "btn primary" }, [t("Apply")]);
   applyBtn.onclick = async () => {
     applyBtn.disabled = true;
-    applyBtn.innerHTML = `<span class="spinner"></span>${t("applying")}`;
+    applyBtn.innerHTML = `<span class="spinner"></span>${t("Applying...")}`;
     try {
       const res = await callApi("apply_all", s, opts);
       result.innerHTML = "";
-      result.appendChild(el("div", { class: "alert success" }, [t("applied_ok")]));
+      result.appendChild(el("div", { class: "alert success" }, [
+        t("Configuration applied successfully.")
+      ]));
       window.APP_STATE.applied = true;
       setFooter({
         hideBack: true,
-        nextLabel: t("finish"),
+        nextLabel: t("Finish"),
         nextHandler: () => callApi("quit"),
       });
     } catch (err) {
       result.innerHTML = "";
       result.appendChild(el("div", { class: "alert error" }, [err.message]));
       applyBtn.disabled = false;
-      applyBtn.textContent = t("apply");
+      applyBtn.textContent = t("Apply");
     }
   };
 
   setFooter({
-    nextLabel: t("apply"),
+    nextLabel: t("Apply"),
     nextHandler: () => applyBtn.click(),
   });
   main.appendChild(applyBtn);
@@ -564,14 +632,16 @@ async function init() {
   });
 
   try {
+    await initGettext(window.APP_STATE.locale);
     const data = await callApi("get_bootstrap");
     window.APP_STATE.bootstrap = data;
     window.APP_STATE.state = data.state;
     window.APP_STATE.driversMeta = data.drivers_meta;
-    if (data.state.locale && window.I18N[data.state.locale]) {
+    if (data.state.locale) {
       window.APP_STATE.locale = data.state.locale;
+      await initGettext(data.state.locale);
     }
-    setLanguage(window.APP_STATE.locale);
+    await setLanguage(window.APP_STATE.locale);
     renderSidebar();
     renderStep();
   } catch (err) {
