@@ -51,6 +51,56 @@ if you want to install the generated package, run:
 sudo apt-get  install ./build/pywebdriver_20230809_amd64.deb
 ```
 
+## Windows Installer Build
+
+The Windows installer is built on a Windows machine (or the `windows-latest` GitHub
+Actions runner). You need:
+
+- **Python 3.12** — https://www.python.org/downloads/
+- **Inno Setup 6** — https://jrsoftware.org/isdl.php (make sure `iscc.exe` is in PATH or
+  note the full path, e.g. `C:\Program Files (x86)\Inno Setup 6\iscc.exe`)
+
+Open a command prompt (PowerShell or CMD) in the repo root and run:
+
+**1. Create and activate a virtual environment**
+
+```powershell
+python -m pip install virtualenv
+virtualenv venv
+.\venv\Scripts\activate
+```
+
+**2. Install dependencies**
+
+```powershell
+pip install -r windows\requirements.txt
+pip install pyinstaller
+pip install -e .
+Copy-Item config\config.ini.tmpl config.ini  # PowerShell
+```
+
+**3. Bundle executables with PyInstaller**
+
+```powershell
+pyinstaller.exe windows\pywebdriver.spec
+```
+
+Output goes to `dist\pywebdriver\`.
+
+**4. Compile the installer with Inno Setup**
+
+```powershell
+& "C:\Program Files (x86)\Inno Setup 6\iscc.exe" windows\setup.iss
+```
+
+If `iscc.exe` is in your PATH you can use `iscc.exe windows\setup.iss` directly.
+
+Output: `windows\Output\pywebdriver_win64_installer.exe`
+
+The CI workflow (`.github/workflows/main.yml`) runs these same steps automatically on
+every push, and uploads both the installer `.exe` and a `.zip` of the dist folder to the
+GitHub release when a version tag is pushed.
+
 ## Windows Configurator Translations
 
 The Windows configurator uses a simple JSON-based translation system.

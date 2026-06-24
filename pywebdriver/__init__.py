@@ -7,6 +7,7 @@
 import gettext
 import logging.config
 import os
+import sys
 from configparser import ConfigParser
 from locale import getdefaultlocale
 
@@ -16,7 +17,13 @@ from flask_babel import Babel
 from flask_cors import CORS
 
 # Config Section
+
+# When frozen by PyInstaller, sys.executable is the .exe in the install root.
+# The user-editable config lives in <install root>\config\config.ini — check
+# that first so it takes priority over the bundled template in _internal\.
+_exe_dir = os.path.dirname(os.path.realpath(sys.executable))
 CONFIG_PATHS = (
+    os.path.join(_exe_dir, "config", "config.ini"),
     "config.ini",
     os.path.join(
         os.path.dirname(os.path.realpath(__file__)), "..", "config", "config.ini"
@@ -28,8 +35,6 @@ for config_file in CONFIG_PATHS:
     if os.path.isfile(config_file):
         break
 else:
-    import sys
-
     logging.basicConfig()
     logging.error(
         "Could not find config.ini. Expected in one of: %s"
@@ -48,6 +53,12 @@ if (
     and config.has_section("formatters")
 ):
     logging.config.fileConfig(config)
+else:
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s %(levelname)s %(name)s: %(message)s",
+        datefmt="%Y-%m-%d %H:%M:%S",
+    )
 
 drivers = {}
 
@@ -57,8 +68,6 @@ app = Flask(__name__)
 try:
     cors_origins = config.get("flask", "cors_origins")
 except Exception:
-    import sys
-
     logging.error(
         "config.ini is missing the [flask] section."
         " Add '[flask] / cors_origins = *' -- see config\\config.ini.tmpl for a full example."
@@ -100,8 +109,6 @@ flask_args = dict(
 if config.has_option("flask", "sslcert"):
     sslcert = config.get("flask", "sslcert")
     if sslcert:
-        import sys
-
         if not config.has_option("flask", "sslkey"):
             print("If you want SSL, you must also provide the sslkey")
             sys.exit(-1)

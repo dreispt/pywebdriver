@@ -24,8 +24,8 @@ Compression=lzma
 SolidCompression=yes
 WizardStyle=modern
 PrivilegesRequired=admin
-ArchitecturesInstallIn64BitMode=x64
-ArchitecturesAllowed=x64
+ArchitecturesInstallIn64BitMode=x64compatible
+ArchitecturesAllowed=x64compatible
 
 [Languages]
 Name: "en"; MessagesFile: "compiler:Default.isl"
@@ -45,9 +45,10 @@ Name: "{app}"; Permissions: users-modify;
 
 [Files]
 ; Bundle except config.ini (handled separately to preserve it during updates).
-Source: "..\dist\pywebdriver\*"; DestDir: "{app}"; Excludes: "config\config.ini"; Permissions: users-modify; Flags: recursesubdirs ignoreversion overwritereadonly
+Source: "..\dist\pywebdriver\*"; DestDir: "{app}"; Excludes: "_internal\config\config.ini"; Permissions: users-modify; Flags: recursesubdirs ignoreversion overwritereadonly
 ; Config template only on first install: never overwrites user's config.
-Source: "..\dist\pywebdriver\config\config.ini"; DestDir: "{app}\config"; Permissions: users-modify; Flags: onlyifdoesntexist uninsneveruninstall
+; Installed at {app}\config\ (outside _internal) so it survives upgrades and is easy to edit.
+Source: "..\dist\pywebdriver\_internal\config\config.ini"; DestDir: "{app}\config"; Permissions: users-modify; Flags: onlyifdoesntexist uninsneveruninstall
 
 [Icons]
 Name: "{group}\Configure PyWebDriver"; Filename: "{app}\{#MyAppConfiguratorExeName}"; WorkingDir: "{app}"; Languages: en
@@ -72,4 +73,4 @@ Filename: "{app}\{#MyAppConfiguratorExeName}"; Description: "Configurar PyWebDri
 Filename: "{app}\{#MyAppConfiguratorExeName}"; Description: "Configurer PyWebDriver maintenant"; Flags: postinstall nowait skipifsilent; Tasks: launchconfig; Languages: french
 
 [UninstallRun]
-Filename: "{app}\{#MyAppConfiguratorExeName}"; Parameters: "--uninstall --remove-ssl"; Flags: runhidden waituntilterminated
+Filename: "{app}\{#MyAppConfiguratorExeName}"; Parameters: "--uninstall --remove-ssl"; Flags: runhidden waituntilterminated; RunOnceId: "UninstallService"

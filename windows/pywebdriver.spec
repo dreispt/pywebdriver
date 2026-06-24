@@ -2,6 +2,8 @@ block_cipher = None
 
 # ---- Servicio principal: pywebdriver.exe ----------------------------------
 
+from PyInstaller.utils.hooks import collect_data_files
+
 server = Analysis(
     ["..\\pywebdriverd"],
     datas=[
@@ -15,7 +17,7 @@ server = Analysis(
         ("..\\pywebdriver\\static\\js\\*", "pywebdriver\\static\\js"),
         ("..\\pywebdriver\\translations\\*", "pywebdriver\\translations"),
         ("..\\pywebdriver\\translations\\fr", "pywebdriver\\translations\\fr"),
-    ],
+    ] + collect_data_files("pytz"),
     hiddenimports=[
         "pywebdriver.plugins.cups_driver",
         "pywebdriver.plugins.display_driver",

@@ -6,12 +6,11 @@ Flask-cors
 pyusb
 pyserial
 Pillow
-netifaces
 pymtp
 setuptools>45
 pywin32
 windows-curses
-pywebview[edgechromium]
+pywebview[edgechromium]>=3.7
 git+https://github.com/akretion/py-xml-escpos.git@py3
 git+https://github.com/akretion/pypostelium.git@master
 git+https://github.com/akretion/pyposdisplay.git@master
