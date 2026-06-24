@@ -15,3 +15,4 @@ pycups; sys_platform == "linux"
 pymtp; sys_platform == "linux"
 pypostelium; sys_platform == "linux"
 pyposdisplay; sys_platform == "linux"
+polib
