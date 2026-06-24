@@ -55,6 +55,7 @@ configurator = Analysis(
         ("configurator\\web\\gettext.js", "configurator_web"),
         ("configurator\\web\\locales\\en.json", "configurator_web\\locales"),
         ("configurator\\web\\locales\\es.json", "configurator_web\\locales"),
+        ("configurator\\web\\locales\\fr.json", "configurator_web\\locales"),
     ],
     hiddenimports=[
         "webview",

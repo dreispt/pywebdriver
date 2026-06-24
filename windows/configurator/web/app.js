@@ -194,13 +194,17 @@ function renderWelcome(main) {
       el("p", { class: "subtitle" }, [t("Choose language")]),
       el("div", { class: "lang-cards" }, [
         el("div", {
-          class: "lang-card" + (window.APP_STATE.locale === "es" ? " selected" : ""),
-          onclick: () => { setLanguage("es"); renderStep(); },
-        }, ["Espanol"]),
-        el("div", {
           class: "lang-card" + (window.APP_STATE.locale === "en" ? " selected" : ""),
           onclick: () => { setLanguage("en"); renderStep(); },
         }, ["English"]),
+        el("div", {
+          class: "lang-card" + (window.APP_STATE.locale === "fr" ? " selected" : ""),
+          onclick: () => { setLanguage("fr"); renderStep(); },
+        }, ["Français"]),
+        el("div", {
+          class: "lang-card" + (window.APP_STATE.locale === "es" ? " selected" : ""),
+          onclick: () => { setLanguage("es"); renderStep(); },
+        }, ["Español"]),
       ]),
     ])
   );
@@ -279,8 +283,8 @@ function renderDrivers(main) {
     }, [
       checkbox,
       el("div", { class: "driver-info" }, [
-        el("div", { class: "driver-name" }, [driver.label[window.APP_STATE.locale]]),
-        el("div", { class: "driver-desc" }, [driver.description[window.APP_STATE.locale]]),
+        el("div", { class: "driver-name" }, [t(driver.label)]),
+        el("div", { class: "driver-desc" }, [t(driver.description)]),
       ]),
     ]);
     main.appendChild(card);
@@ -332,7 +336,7 @@ function renderDriverConfig(main) {
 function renderDriverSection(driver) {
   const lang = window.APP_STATE.locale;
   const section = el("div", { class: "driver-section" }, [
-    el("h3", {}, [driver.label[lang]]),
+    el("h3", {}, [t(driver.label)]),
   ]);
   const grid = el("div", { class: "fields-grid" });
   section.appendChild(grid);
@@ -391,7 +395,7 @@ function renderDriverSection(driver) {
       }
 
       grid.appendChild(field({
-        label: fieldDef.label[lang],
+        label: t(fieldDef.label),
         input,
       }));
     });

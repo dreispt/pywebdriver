@@ -1,4 +1,4 @@
-; Script generado para PyWebDriver con configurador grafico (PyWebView).
+; Script generated for PyWebDriver with graphical configurator (PyWebView).
 ; SEE THE DOCUMENTATION FOR DETAILS ON CREATING INNO SETUP SCRIPT FILES!
 
 #define MyAppName "Odoo Pywebdriver"
@@ -33,29 +33,43 @@ Name: "spanish"; MessagesFile: "compiler:Languages\Spanish.isl"
 Name: "french"; MessagesFile: "compiler:Languages\French.isl"
 
 [Tasks]
-Name: "launchconfig"; Description: "Abrir el configurador al finalizar la instalacion"; GroupDescription: "Pos-instalacion:"
-Name: "silentdefaults"; Description: "Aplicar configuracion por defecto sin asistente (despliegues masivos)"; GroupDescription: "Pos-instalacion:"; Flags: unchecked
+Name: "launchconfig"; Description: "Open configurator after installation (requires administrator privileges)"; GroupDescription: "Post-installation:"; Languages: en
+Name: "launchconfig"; Description: "Abrir el configurador al finalizar la instalacion (requiere privilegios de administrador)"; GroupDescription: "Pos-instalacion:"; Languages: spanish
+Name: "launchconfig"; Description: "Ouvrir le configurateur après l'installation (nécessite des privilèges d'administrateur)"; GroupDescription: "Post-installation:"; Languages: french
+Name: "silentdefaults"; Description: "Apply default configuration without wizard (mass deployments)"; GroupDescription: "Post-installation:"; Flags: unchecked; Languages: en
+Name: "silentdefaults"; Description: "Aplicar configuracion por defecto sin asistente (despliegues masivos)"; GroupDescription: "Pos-instalacion:"; Flags: unchecked; Languages: spanish
+Name: "silentdefaults"; Description: "Appliquer la configuration par défaut sans assistant (déploiements massifs)"; GroupDescription: "Post-installation:"; Flags: unchecked; Languages: french
 
 [Dirs]
 Name: "{app}"; Permissions: users-modify;
 
 [Files]
-; Todo el bundle excepto config.ini (se trata aparte para preservarlo en updates).
+; Bundle except config.ini (handled separately to preserve it during updates).
 Source: "..\dist\pywebdriver\*"; DestDir: "{app}"; Excludes: "config\config.ini"; Permissions: users-modify; Flags: recursesubdirs ignoreversion overwritereadonly
-; Plantilla de config solo en primera instalacion: nunca pisa la del usuario.
+; Config template only on first install: never overwrites user's config.
 Source: "..\dist\pywebdriver\config\config.ini"; DestDir: "{app}\config"; Permissions: users-modify; Flags: onlyifdoesntexist uninsneveruninstall
 
 [Icons]
-Name: "{group}\Configurar PyWebDriver"; Filename: "{app}\{#MyAppConfiguratorExeName}"; WorkingDir: "{app}"
-Name: "{group}\Estado del servicio"; Filename: "{app}\{#MyAppConfiguratorExeName}"; WorkingDir: "{app}"
-Name: "{group}\Carpeta de instalacion"; Filename: "{app}"
-Name: "{group}\Desinstalar PyWebDriver"; Filename: "{uninstallexe}"
+Name: "{group}\Configure PyWebDriver"; Filename: "{app}\{#MyAppConfiguratorExeName}"; WorkingDir: "{app}"; Languages: en
+Name: "{group}\Configurar PyWebDriver"; Filename: "{app}\{#MyAppConfiguratorExeName}"; WorkingDir: "{app}"; Languages: spanish
+Name: "{group}\Configurer PyWebDriver"; Filename: "{app}\{#MyAppConfiguratorExeName}"; WorkingDir: "{app}"; Languages: french
+Name: "{group}\Service status"; Filename: "{app}\{#MyAppConfiguratorExeName}"; WorkingDir: "{app}"; Languages: en
+Name: "{group}\Estado del servicio"; Filename: "{app}\{#MyAppConfiguratorExeName}"; WorkingDir: "{app}"; Languages: spanish
+Name: "{group}\État du service"; Filename: "{app}\{#MyAppConfiguratorExeName}"; WorkingDir: "{app}"; Languages: french
+Name: "{group}\Installation folder"; Filename: "{app}"; Languages: en
+Name: "{group}\Carpeta de instalacion"; Filename: "{app}"; Languages: spanish
+Name: "{group}\Dossier d'installation"; Filename: "{app}"; Languages: french
+Name: "{group}\Uninstall PyWebDriver"; Filename: "{uninstallexe}"; Languages: en
+Name: "{group}\Desinstalar PyWebDriver"; Filename: "{uninstallexe}"; Languages: spanish
+Name: "{group}\Désinstaller PyWebDriver"; Filename: "{uninstallexe}"; Languages: french
 
 [Run]
-; Modo silencioso: solo escribe defaults + instala servicio (deploys masivos / /SILENT).
+; Silent mode: only writes defaults + installs service (mass deployments / /SILENT).
 Filename: "{app}\{#MyAppConfiguratorExeName}"; Parameters: "--silent --install-service --generate-ssl"; Flags: runhidden waituntilterminated; Tasks: silentdefaults
-; Modo interactivo: lanza el wizard grafico para configurar todo.
-Filename: "{app}\{#MyAppConfiguratorExeName}"; Description: "Configurar PyWebDriver ahora"; Flags: postinstall nowait skipifsilent; Tasks: launchconfig
+; Interactive mode: launches the graphical wizard to configure everything.
+Filename: "{app}\{#MyAppConfiguratorExeName}"; Description: "Configure PyWebDriver now"; Flags: postinstall nowait skipifsilent; Tasks: launchconfig; Languages: en
+Filename: "{app}\{#MyAppConfiguratorExeName}"; Description: "Configurar PyWebDriver ahora"; Flags: postinstall nowait skipifsilent; Tasks: launchconfig; Languages: spanish
+Filename: "{app}\{#MyAppConfiguratorExeName}"; Description: "Configurer PyWebDriver maintenant"; Flags: postinstall nowait skipifsilent; Tasks: launchconfig; Languages: french
 
 [UninstallRun]
 Filename: "{app}\{#MyAppConfiguratorExeName}"; Parameters: "--uninstall --remove-ssl"; Flags: runhidden waituntilterminated
