@@ -21,7 +21,7 @@
   "Use * to allow all. Separate multiple with commas.": "Use * para permitir todos. Separe varios con coma.",
   "Debug mode (DO NOT use in production)": "Modo debug (NO usar en produccion)",
   "Drivers to enable": "Drivers a habilitar",
-  "Tick the devices you will use. Items marked with \u2605 are recommended.": "Marque los dispositivos que va a utilizar. Los marcados con \u2605 son recomendados.",
+  "Tick the devices you will use. Items marked with ★ are recommended.": "Marque los dispositivos que va a utilizar. Los marcados con ★ son recomendados.",
   "Adjust each enabled driver. Use Detect to scan connected hardware.": "Ajuste los parametros de cada driver activado. Use Detectar para escanear hardware conectado.",
   "Detect hardware": "Detectar hardware",
   "Detecting...": "Detectando...",
@@ -91,5 +91,6 @@
   "This wizard will guide you through configuring PyWebDriver: hardware drivers, SSL certificates, and the Windows service.": "Este asistente le guiara para configurar PyWebDriver: drivers de hardware, certificados SSL y servicio de Windows.",
   "Generating certificates...": "Generando certificados...",
   "Not installed": "No instalado",
-  "Unknown": "Desconocido"
+  "Unknown": "Desconocido",
+  "Configuration saved, but service installation failed: ": "Configuracion guardada, pero la instalacion del servicio fallo: "
 }

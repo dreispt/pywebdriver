@@ -599,8 +599,12 @@ function renderSummary(main) {
     try {
       const res = await callApi("apply_all", s, opts);
       result.innerHTML = "";
-      result.appendChild(el("div", { class: "alert success" }, [
-        t("Configuration applied successfully.")
+      const serviceStep = (res.steps || []).find((s) => s.name === "service");
+      const allOk = !serviceStep || serviceStep.ok;
+      result.appendChild(el("div", { class: allOk ? "alert success" : "alert warning" }, [
+        allOk
+          ? t("Configuration applied successfully.")
+          : t("Configuration saved, but service installation failed: ") + serviceStep.error,
       ]));
       window.APP_STATE.applied = true;
       setFooter({

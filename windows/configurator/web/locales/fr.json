@@ -73,7 +73,6 @@
   "Timeout (s)": "Delai d'attente (s)",
   "Customer display": "Affichage client",
   "Customer-facing display connected via serial port (COM).": "Ecran client connecte via port serie (COM).",
-  "Port": "Port",
   "Ingenico/Telium payment terminal": "Terminal de paiement Ingenico/Telium",
   "Payment terminal using Telium 3 protocol (Ingenico, Sagem).": "Terminal de paiement utilisant le protocole Telium 3 (Ingenico, Sagem).",
   "Adyen terminal": "Terminal Adyen",
@@ -93,5 +92,6 @@
   "Stores SVG signatures sent from the frontend.": "Stocke les signatures SVG envoyees depuis le frontend.",
   "Signature file": "Fichier de signature",
   "Download path": "Chemin de telechargement",
-  "auto": "auto"
+  "auto": "auto",
+  "Configuration saved, but service installation failed: ": "Configuration sauvegardee, mais l'installation du service a echoue : "
 }
