@@ -15,9 +15,10 @@ server = Analysis(
         ("..\\pywebdriver\\static\\css\\*", "pywebdriver\\static\\css"),
         ("..\\pywebdriver\\static\\images\\*", "pywebdriver\\static\\images"),
         ("..\\pywebdriver\\static\\js\\*", "pywebdriver\\static\\js"),
-        ("..\\pywebdriver\\translations\\*", "pywebdriver\\translations"),
-        ("..\\pywebdriver\\translations\\fr", "pywebdriver\\translations\\fr"),
-    ] + collect_data_files("pytz"),
+        ("..\\pywebdriver\\translations\\de\\LC_MESSAGES\\messages.mo", "pywebdriver\\translations\\de\\LC_MESSAGES"),
+        ("..\\pywebdriver\\translations\\es\\LC_MESSAGES\\messages.mo", "pywebdriver\\translations\\es\\LC_MESSAGES"),
+        ("..\\pywebdriver\\translations\\fr\\LC_MESSAGES\\messages.mo", "pywebdriver\\translations\\fr\\LC_MESSAGES"),
+    ] + collect_data_files("pytz") + collect_data_files("escpos") + collect_data_files("babel"),
     hiddenimports=[
         "pywebdriver.plugins.cups_driver",
         "pywebdriver.plugins.display_driver",

@@ -60,6 +60,8 @@ else:
         datefmt="%Y-%m-%d %H:%M:%S",
     )
 
+logging.info("Using config file: %s", os.path.realpath(config_file))
+
 drivers = {}
 
 # Project Import
@@ -73,9 +75,7 @@ except Exception:
         " Add '[flask] / cors_origins = *' -- see config\\config.ini.tmpl for a full example."
     )
     sys.exit(1)
-cors = CORS(
-    app, resources={r"/*": {"origins": cors_origins, "headers": ["Content-Type"]}}
-)
+cors = CORS(app, resources={r"/*": {"origins": cors_origins}})
 
 from . import plugins  # noqa: E402
 from . import views  # noqa: E402
@@ -88,11 +88,20 @@ app.config["BABEL_DEFAULT_LOCALE"] = locale or "en_US"
 babel = Babel(app)
 
 path = os.path.join(os.path.dirname(os.path.realpath(__file__)), "translations")
-if localization:
+mo_path = os.path.join(path, localization or "", "LC_MESSAGES", "messages.mo")
+if localization and os.path.exists(mo_path):
     language = gettext.translation("messages", path, [localization])
-    language.install()
 else:
-    gettext.install("messages", path)
+    # No .mo for this locale (e.g. 'en' uses the built-in source strings)
+    language = gettext.NullTranslations()
+language.install()
+
+logging.info(
+    "Listening on %s:%s",
+    config.get("flask", "host", fallback="0.0.0.0"),
+    config.getint("flask", "port", fallback=3000),
+)
+logging.info("Active drivers: %s", ", ".join(sorted(drivers)) or "none")
 
 # To run with flask
 if config.getboolean("application", "print_status_start"):

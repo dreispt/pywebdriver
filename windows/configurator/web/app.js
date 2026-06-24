@@ -507,7 +507,7 @@ function renderService(main) {
       t(status === "not_installed" ? "Not installed"
         : pillClass === "running" ? "Running"
         : pillClass === "stopped" ? "Stopped"
-        : "Unknown")
+        : `Unknown (${status})`)
     ]),
   ]));
 

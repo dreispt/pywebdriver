@@ -42,7 +42,10 @@ def status(app_dir):
     code, out, _ = _run([nssm, "status", SERVICE_NAME])
     if code != 0:
         return "not_installed"
-    state = (out or "").strip().split("\n")[0].strip()
+    # NSSM writes UTF-16LE to stdout; subprocess reads it as bytes decoded with
+    # the system codepage, leaving null bytes interspersed. Strip them before
+    # splitting so the status token (e.g. SERVICE_RUNNING) is clean.
+    state = (out or "").replace("\x00", "").strip().split("\n")[0].strip()
     return state or "unknown"
 
 

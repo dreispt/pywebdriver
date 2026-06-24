@@ -85,7 +85,8 @@ Copy-Item config\config.ini.tmpl config.ini  # PowerShell
 pyinstaller.exe windows\pywebdriver.spec
 ```
 
-Output goes to `dist\pywebdriver\`.
+Output goes to `dist\pywebdriver\` (contains both `pywebdriver.exe` and
+`pywebdriver-configurator.exe`).
 
 **4. Compile the installer with Inno Setup**
 
