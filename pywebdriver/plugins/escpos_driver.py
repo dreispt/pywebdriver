@@ -21,7 +21,7 @@ except ImportError:
 from PIL import Image
 from xmlescpos import Layout
 
-from pywebdriver import app, config, drivers
+from pywebdriver import _, app, config, drivers
 
 from .base_driver import ThreadDriver
 

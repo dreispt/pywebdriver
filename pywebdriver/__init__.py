@@ -95,6 +95,7 @@ else:
     # No .mo for this locale (e.g. 'en' uses the built-in source strings)
     language = gettext.NullTranslations()
 language.install()
+_ = language.gettext
 
 logging.info(
     "Listening on %s:%s",
