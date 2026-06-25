@@ -28,7 +28,6 @@ disable=missing-module-docstring,
     consider-using-dict-items,
     consider-using-with,
     consider-using-in,
-    undefined-variable,
     no-member,
     unused-variable
 
